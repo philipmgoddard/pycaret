@@ -59,7 +59,7 @@ It requires the following packages:
 
 sklearn (>=0.18)
 numpy ()
-pandas (>=0.19)
+pandas (>=0.19.2)
 matplotlib ()
 seaborn ()
 
@@ -70,15 +70,21 @@ For the current version (0.0.1.dev1) it is recommended to create an anaconda env
 ``` bash
 conda create --name pycaret-env python=3.5
 
+# activate conda environment
 source activate pycaret-env
-pip install
-pip install
-pip install
 
-git clone
+#install dependencies
+pip install pandas==0.19.2
+pip install scikit-learn==0.18.2
+pip install matplotlib==2.0.0
+pip install seaborn==0.7.1
 
-cd ....
-sudo python  (install instruction)
+# clone the repository
+git clone https://github.com/philipmgoddard/pycaret.git
+
+cd pycaret
+git checkout develop
+sudo python setup.py install
 ```
 
 ### Feedback
