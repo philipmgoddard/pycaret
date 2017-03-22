@@ -57,27 +57,31 @@ pycaret emphasises usage of the Pandas dataframe. This is because working with d
 pycaret has been tested using python3.5
 It requires the following packages:
 
-sklearn (>=0.18)
-numpy ()
-pandas (>=0.19.2)
-matplotlib ()
-seaborn ()
+sklearn 0.18.1
+numpy 1.12.1
+pandas 0.19.2
+matplotlib 2.0.0
+seaborn 0.7.1
+scipy 0.19.0
 
 ### Installation instructions
 
 For the current version (0.0.1.dev1) it is recommended to create an anaconda environment:
 
 ``` bash
+# use anaconda3
 conda create --name pycaret-env python=3.5
 
 # activate conda environment
 source activate pycaret-env
 
 #install dependencies
-pip install pandas==0.19.2
-pip install scikit-learn==0.18.2
-pip install matplotlib==2.0.0
-pip install seaborn==0.7.1
+conda install numpy
+conda install scipy
+conda install pandas
+conda install scikit-learn
+conda install matplotlib
+conda install seaborn
 
 # clone the repository
 git clone https://github.com/philipmgoddard/pycaret.git
