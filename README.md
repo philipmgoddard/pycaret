@@ -86,9 +86,11 @@ conda install seaborn
 # clone the repository
 git clone https://github.com/philipmgoddard/pycaret.git
 
+# checkout and install
+# I found python setup.py install to be buggy when using anaconda
 cd pycaret
 git checkout develop
-sudo python setup.py install
+pip install ../pycaret/
 ```
 
 ### Feedback
