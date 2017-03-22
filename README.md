@@ -54,15 +54,14 @@ pycaret emphasises usage of the Pandas dataframe. This is because working with d
 
 ### Usage information
 
-pycaret has been tested using python3.5
-It requires the following packages:
+pycaret has been tested using python3.5. It was tested with the following packages:
 
-sklearn 0.18.1
-numpy 1.12.1
-pandas 0.19.2
-matplotlib 2.0.0
-seaborn 0.7.1
-scipy 0.19.0
+- sklearn 0.18.1
+- numpy 1.12.1
+- pandas 0.19.2
+- matplotlib 2.0.0
+- seaborn 0.7.1
+- scipy 0.19.0
 
 ### Installation instructions
 
