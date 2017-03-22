@@ -88,7 +88,7 @@ git clone https://github.com/philipmgoddard/pycaret.git
 # checkout and install
 # I found python setup.py install to be buggy when using anaconda
 cd pycaret
-git checkout develop
+git checkout 0.0.1.dev1
 pip install ../pycaret/
 ```
 
