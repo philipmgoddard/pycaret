@@ -177,6 +177,7 @@ class Kappa():
   def best(results):
     return results.sort_values(by = 'mean_kappa', ascending = False).head(1)
 
+
 class RMSE():
   '''
   Root mean square error
