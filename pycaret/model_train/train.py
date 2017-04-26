@@ -47,9 +47,33 @@ class Train():
 
     model_args = kwargs.get('model_args', None)
 
+    # dont instantuiate self.preProcess yet - will just be a list of functions rather than
+    # objects that actually hold the good stuff. WHat happesn if make class, define attribute, then
+    # modify? Could be alright with this strategy
     self.trControl, self.metric, self.tuneGrid, self.preProcess, summaryFunction, \
     metric_results, sumFunc_results, resamp_func, resamp_args, n_resamples, nrow_grid \
     = train_setup(trControl, method, metric, tuneGrid, preProcess)
+
+    #############################################
+    # data preprocessing
+    # think how best to implement
+    # simply wrapper around sk-learn / scipy tool? I think yes for the time being
+    #############################################
+
+    # DECIDE HOW BEST TO DO THIS
+    if self.preProcess:
+      pp_list = []
+      # if 'pca' in self.preProcess:
+      #   pp_list = [center, scale, pca]
+      else:
+        for pp in self.PreProcess:
+          if pp = 'center':
+            pp_list.append(mean_center)
+          if pp = 'scale':
+            pp_list.append(normalise)
+
+    print(self.preProcess)
+
 
     #############################################
     # model training
@@ -64,7 +88,7 @@ class Train():
 
       row_index = resamp_func(x.index.values, **resamp_args)
 
-      # this can be parellelised with multiprocessing module
+      # DO I PASS PREPROCESS OBJECT IN HERE??? or would it be better to decorate?
       metric_perf, perf = resamp_loop(self.train_input, self.train_outcome,
                                       row_index, n_resamples, model, self.metric,
                                       summaryFunction)
@@ -109,6 +133,8 @@ class Train():
         model_args.update({hyp_param : best[hyp_param].values[0]})
       model = self.method(**model_args)
 
+    # preprocess if neccessary, retain original input however
+
     model.train(self.train_input, self.train_outcome)
 
     ##########################################
@@ -122,6 +148,9 @@ class Train():
     self.metric_results = metric_results
     self.sumFunc_results = sumFunc_results
     self.fitted_model = model
+
+
+    ## set preprocess objects as attribute!!
 
 
   # TESTS THIS!!!

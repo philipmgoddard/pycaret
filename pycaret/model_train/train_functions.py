@@ -43,7 +43,10 @@ def train_setup(trControl = None, method = None, metric = None,
    tuneGrid = tuneGrid
 
   if preProcess:
-    raise NotImplementedError
+    if all([x in ['center', 'scale', 'pca'] for x in preProcess]):
+      continue
+    else:
+      raise NotImplementedError
 
   summaryFunction = trControl.summaryFunction
 
@@ -134,6 +137,9 @@ def resamp_loop(train_input, train_outcome, row_index,
   for i in np.arange(n_resamples):
     train_samp = next(row_index)
     curr_train_input = train_input.iloc[train_samp]
+
+    # if preprocess do it here???
+
     curr_train_outcome = train_outcome.iloc[train_samp]
     holdout = np.array([x for x in index_values if x not in train_samp])
 
