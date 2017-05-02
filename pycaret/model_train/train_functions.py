@@ -13,7 +13,7 @@ def train_setup(trControl = None, method = None, metric = None,
 
   Inputs:
   trControl: object of class TrainControl
-  method: str classification/regression model
+  method: class wrapping model object, containing __init__, train and predict methods
   metric: metric object for evaluating model performance
   tuneGrid: pandas dataframe of hyperparameters
   preProcess: currently not implemented
@@ -24,6 +24,10 @@ def train_setup(trControl = None, method = None, metric = None,
   # Set defaults if arguments not specified
   #
   ########################################
+
+  if not method:
+    raise ValueError('Must specify ML algorithm')
+
   if not trControl:
       trControl = TrainControl()
 
@@ -42,14 +46,7 @@ def train_setup(trControl = None, method = None, metric = None,
   else:
    tuneGrid = tuneGrid
 
-  if preProcess:
-    if all([x in ['center', 'scale', 'pca'] for x in preProcess]):
-      continue
-    else:
-      raise NotImplementedError
-
   summaryFunction = trControl.summaryFunction
-
   if summaryFunction == defaultSummary:
     summaryFunction = defaultSummary(method.modelType)
 
@@ -105,7 +102,7 @@ def train_setup(trControl = None, method = None, metric = None,
           n_resamples, nrow
 
 
-def resamp_loop(train_input, train_outcome, row_index,
+def resamp_loop(train_input, train_outcome, preProcess, row_index,
                n_resamples, model, metric, summaryFunction):
   '''
   resample loop for hyperparameter selection.
@@ -127,6 +124,7 @@ def resamp_loop(train_input, train_outcome, row_index,
   metric_perf = np.empty([n_resamples])
   index_values = train_input.index.values
 
+
   ########################################
   #
   # Loop over n_resamples. Get next array holding index to sample
@@ -138,7 +136,17 @@ def resamp_loop(train_input, train_outcome, row_index,
     train_samp = next(row_index)
     curr_train_input = train_input.iloc[train_samp]
 
-    # if preprocess do it here???
+    ########################################
+    # Preprocessing if specified
+    ########################################
+    if preProcess is not None:
+      for pp in preProcess:
+        pp.fit(curr_train_input)
+        curr_train_input = pp.transform(curr_train_input)
+
+      # transform all input to ensure holdout is transformed in same way
+      train_input = pp.transform(train_input)
+    ########################################
 
     curr_train_outcome = train_outcome.iloc[train_samp]
     holdout = np.array([x for x in index_values if x not in train_samp])

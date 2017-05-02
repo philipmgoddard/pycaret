@@ -1,77 +1,55 @@
 from sklearn.preprocessing import StandardScaler
-from sklearn,decomposition import PCA
+from sklearn.decomposition import PCA
 import pandas as pd
 
 '''
-desired behaviour:
-list of strings in (e.g. 'center_scale', 'pca')
-
-list of preprocessing classes created corresponding to strings
-
-then called to apply to data frame
-the attribute updated
-
-pca either keeps enough features to get 95% of variance, or set n
-
-
+Aim: to wrap any preprocessing functionality with a standard interface.
+Any preprocessing method could be added. Requirement is that it has a fit method
+that takes a pandas dataframe of features, and a transform method that applies the
+fitted transformation, returning a dataframe of transformed features.
 '''
 
-class PP():
+class CS_Process():
+  '''
+  Wrapper class to provide mean centering and scaling.
+  This implementation is a wrapper around sklearn.preprocessing.StandardScaler
+  '''
 
-  def __init__(self, pp_list, pca_comp = None, pca_thresh = 0.95):
+  def __init__(self, **kwargs):
+    self.pp_method = StandardScaler(**kwargs)
 
-    self.pp_list = pp_list
-    self.pp_classes = []
+  def fit(self, x):
+    self.pp_method.fit(x)
 
-
-    if pca_comp is not None & pca_thresh is not None:
-      raise ValueError('choose number of components or threshold')
-
-    self.pca_thresh = pca_thresh
-
-    for _ in pp_list:
-      if _ == 'cs':
-        self.pp_classes.append(StandardScaler())
-
-      if _ == 'pca':
-        # note: if none then retains all.
-        self.pp_classes.append(PCA(n_components = pca_comp))
+  def transform(self, x):
+    colnames = [n for n in x.columns]
+    trans = self.pp_method.transform(x)
+    return pd.DataFrame(trans, columns=colnames)
 
 
-  def __call__(self, df):
-    # fit preprocessing and transform data in order
-    # as use sklearn classes, can take advantage that
-    # API is consistent
+class PCA_Process():
+  '''
+  Wrapper class to provide mean centering and scaling.
+  This implementation is a wrapper around sklearn.decomposition.PCA
 
-    colnames = [n for n in df.columns]
+  Highly recommended that data is centered and scaled before applying PCA transformation.
+  '''
 
-    print('**')
-    print(df)
-    for _ in self.pp_classes:
-      df = _.fit_transform(df)
+  def __init__(self, **kwargs):
+    self.pp_method = PCA(**kwargs)
 
-    # if
-    if 'pca' in self.pp_list:
-      if self.pca_thresh is not None:
-        cumsum = 0.
-        count = 0
-        for i, in df.shape[1]:
-          cumsum += df[i,i]
-          count += 1
-          if cumsum >= self.pca_thresh:
-            break
+  def fit(self, x):
+    self.pp_method.fit(x)
 
-        df = df[:, count]
-        colnames = ['comp_'+str(i+1) for i in count]
-        df = pd.DataFrame(df, columns = colnames)
-        return df
-      else:
-        colnames = ['comp_'+str(i+1) for i in range(df.shape[1])]
-        df = pd.DataFrame(df, columns = colnames)
-        return df
+  def transform(self, x):
+    if self.pp_method.n_components is None:
+      colnames = ['comp_'+ str(n+1) for n in range(x.shape[1])]
+    else:
+      colnames = ['comp_'+ str(n+1) for n in range(self.pp_method.n_components)]
+
+    trans = self.pp_method.transform(x)
+    return pd.DataFrame(trans, columns=colnames)
 
 
-    # IF NO PCA JUST ADD COLNAMES BACK
-    df = pd.DataFrame(df, columns = colnames)
 
-    return df
+

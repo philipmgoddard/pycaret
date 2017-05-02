@@ -30,7 +30,7 @@ class Train():
     metric: object from module pycaret.performance_metric.metric to evaluate the algorithm's performance]
     trControl: TrainControl object, specifying the training options
     tuneGrid: pandas dataframe specifying the hyperparameters to trial when training the model
-    **kwargs: other arguments to pass. To pass to the underlying algorithm, use {'model_args': {'arg1': 123, 'arg2': 456,...}}
+    **kwargs: other arguments to pass. To pass to the underlying algorithm, use {'model_kwargs': {'arg1': 123, 'arg2': 456,...}}
     '''
 
     #############################################
@@ -45,34 +45,13 @@ class Train():
     # TODO: put an exception here for multiclass classification
     # something for next version i thinks!
 
-    model_args = kwargs.get('model_args', None)
+    model_kwargs = kwargs.get('model_kwargs', None)
+    pp_kwargs = kwargs.get('pp_args', None)
 
-    # dont instantuiate self.preProcess yet - will just be a list of functions rather than
-    # objects that actually hold the good stuff. WHat happesn if make class, define attribute, then
-    # modify? Could be alright with this strategy
+    # setup and validation
     self.trControl, self.metric, self.tuneGrid, self.preProcess, summaryFunction, \
     metric_results, sumFunc_results, resamp_func, resamp_args, n_resamples, nrow_grid \
     = train_setup(trControl, method, metric, tuneGrid, preProcess)
-
-    #############################################
-    # data preprocessing
-    # think how best to implement
-    # simply wrapper around sk-learn / scipy tool? I think yes for the time being
-    #############################################
-
-    # DECIDE HOW BEST TO DO THIS
-    if self.preProcess:
-      pp_list = []
-      # if 'pca' in self.preProcess:
-      #   pp_list = [center, scale, pca]
-      else:
-        for pp in self.PreProcess:
-          if pp = 'center':
-            pp_list.append(mean_center)
-          if pp = 'scale':
-            pp_list.append(normalise)
-
-    print(self.preProcess)
 
 
     #############################################
@@ -81,15 +60,14 @@ class Train():
 
     # fit model with resampling, no hyperparams
     if self.tuneGrid is None:
-      if model_args is None:
+      if model_kwargs is None:
         model = self.method()
       else:
-        model = self.method(**model_args)
+        model = self.method(**model_kwargs)
 
       row_index = resamp_func(x.index.values, **resamp_args)
 
-      # DO I PASS PREPROCESS OBJECT IN HERE??? or would it be better to decorate?
-      metric_perf, perf = resamp_loop(self.train_input, self.train_outcome,
+      metric_perf, perf = resamp_loop(self.train_input, self.train_outcome, self.preProcess,
                                       row_index, n_resamples, model, self.metric,
                                       summaryFunction)
 
@@ -103,15 +81,15 @@ class Train():
       for row in range(nrow_grid):
         for hyp_param in self.tuneGrid: # is a pd dataframe
 
-          if model_args:
-            model_args.update({hyp_param : self.tuneGrid[hyp_param][row]})
+          if model_kwargs:
+            model_kwargs.update({hyp_param : self.tuneGrid[hyp_param][row]})
           else:
-            model_args = {hyp_param : self.tuneGrid[hyp_param][row]}
+            model_kwargs = {hyp_param : self.tuneGrid[hyp_param][row]}
 
-        model = self.method(**model_args)
+        model = self.method(**model_kwargs)
         row_index = resamp_func(x.index.values, **resamp_args)
 
-        metric_perf, perf = resamp_loop(self.train_input, self.train_outcome,
+        metric_perf, perf = resamp_loop(self.train_input, self.train_outcome, self.preProcess,
                                         row_index, n_resamples, model, self.metric,
                                         summaryFunction)
 
@@ -130,40 +108,55 @@ class Train():
       pass
     else:
       for hyp_param in self.tuneGrid:
-        model_args.update({hyp_param : best[hyp_param].values[0]})
-      model = self.method(**model_args)
+        model_kwargs.update({hyp_param : best[hyp_param].values[0]})
+      model = self.method(**model_kwargs)
 
     # preprocess if neccessary, retain original input however
 
-    model.train(self.train_input, self.train_outcome)
+    if self.preProcess is not None:
+      trans_input = self.train_input
+      for pp in self.preProcess:
+        pp.fit(trans_input)
+        trans_input = pp.transform(trans_input)
+      model.train(trans_input, self.train_outcome)
+    else:
+      model.train(self.train_input, self.train_outcome)
 
     ##########################################
     # save predictions and optionally predprob as attribute
     # save metric and summary function results and model as attribute
     ##########################################
-    self.pred_values = model.predict(self.train_input)
-    if self.trControl.classProbs:
-      self.pred_probs = model(self.train_input, predict_proba = True)
+
+    if self.preProcess is not None:
+      self.pred_values = model.predict(trans_input)
+      if self.trControl.classProbs:
+        self.pred_probs = model(trans_input, predict_proba = True)
+    else:
+      self.pred_values = model.predict(self.train_input)
+      if self.trControl.classProbs:
+        self.pred_probs = model(self.train_input, predict_proba = True)
 
     self.metric_results = metric_results
     self.sumFunc_results = sumFunc_results
     self.fitted_model = model
 
 
-    ## set preprocess objects as attribute!!
-
-
-  # TESTS THIS!!!
   def predict(self, newdata, **kwargs):
     '''
     Useful docstring
     '''
-    return self.fitted_model.predict(newdata, **kwargs)
+    if self.preProcess is not None:
+      for pp in self.preProcess:
+        newdata = pp.transform(newdata)
+      return self.fitted_model.predict(newdata, **kwargs)
+    else:
+      return self.fitted_model.predict(newdata, **kwargs)
 
 
   def plot(self):
     '''
     useful docstring
+    REDO: remove seaborn. I dont like it.
     '''
     df = self.metric_results
     n_hyperparams = df.shape[1] - 2
