@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import copy
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 
 from pycaret.model_train.train_functions import resamp_loop, train_setup, update_summary
 from pycaret.model_train.train_control import TrainControl
@@ -132,34 +132,78 @@ class Train():
     return self.fitted_model.predict(newdata, **kwargs)
 
 
-  def plot(self):
+  def plot(self, f_size = (6,6)):
     '''
     useful docstring
     '''
     df = self.metric_results
     n_hyperparams = df.shape[1] - 2
-    sns.set_style('white')
+    #sns.set_style('white')
 
     if n_hyperparams == 1:
+
+      # simple xy plot
       hp1 = df.columns.values[0]
       metric = df.columns.values[1]
-      sns.factorplot(x = hp1, y = metric, data = df, facet_kws={'size' : 5})
-      plt.show()
+
+      f, axarr = plt.subplots(1, 1, figsize = f_size, dpi=80)
+
+      axarr.spines['right'].set_visible(False)
+      axarr.spines['top'].set_visible(False)
+      axarr.tick_params(axis=u'both', which=u'both',length=5)
+
+      # sort line and point styles style
+      axarr.plot(df[hp1], df[metric], '-')
+      axarr.scatter(df[hp1], df[metric])
+      axarr.set_ylabel(metric)
+      axarr.set_xlabel(hp1)
+
+
     elif n_hyperparams == 2:
       hp1 = df.columns.values[0]
       hp2 = df.columns.values[1]
       metric = df.columns.values[2]
-      sns.factorplot(x = hp1, y = metric, hue = hp2, data = df, facet_kws={'size' : 5})
-      plt.show()
+
+      f, axarr = plt.subplots(1, 1, figsize = f_size, dpi=80)
+
+      axarr.spines['right'].set_visible(False)
+      axarr.spines['top'].set_visible(False)
+      axarr.tick_params(axis=u'both', which=u'both',length=5)
+
+      for _1 in df[hp1].drop_duplicates():
+
+        hp2_tmp = df.loc[(df[hp1] == _1), [hp2]].values
+        hp2_tmp = [x[0] for x in hp2_tmp]
+        metric_tmp = df.loc[(df[hp1] == _1), [metric]].values
+        metric_tmp = [x[0] for x in metric_tmp]
+
+        axarr.plot(hp2_tmp, metric_tmp, '-x', label = _1)
+
+      axarr.set_ylabel(metric)
+      axarr.set_xlabel(hp1)
+      axarr.legend(loc = 'best', title = hp1 )
+
     elif n_hyperparams == 3:
       hp1 = df.columns.values[0]
       hp2 = df.columns.values[1]
       hp3 = df.columns.values[2]
       metric = df.columns.values[3]
+
+      # initialise grid
+      if len(hp3) % 3 == 0:
+        n_row = len(hp3) // 3
+      else:
+        n_row = len(hp3) // 4
+
+      f, axarr = plt.subplots(nrow, 3, figsize = f_size, dpi=80)
+
+      # and do the plots
+
+
       sns.factorplot(x = hp1, y = metric, hue = hp2, col = hp3, data = df, facet_kws={'size' : 5})
       plt.show()
     elif n_hyperparams > 3:
-      raise ValueError('Too many hyperparameters for an intuitive plot. Go manual!')
+      raise ValueError('Too many hyperparameters for a simple plot. Go manual!')
 
 
 

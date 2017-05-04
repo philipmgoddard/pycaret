@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
-import seaborn as sns
+#import seaborn as sns
 from scipy.stats import gaussian_kde
 
 
@@ -35,7 +35,7 @@ def plot_pred_reg(pred, outcome):
 
 def plot_roc(predprob, outcome):
   '''
-  Plot roc curve. Uses sklearn.metrics
+  Plot roc curve for binary outcome. Uses sklearn.metrics
 
   Inputs:
   predprob: np array of predicted class probabilties for the positive class
@@ -58,7 +58,6 @@ def plot_roc(predprob, outcome):
 
 
 def kde_plot(df, n_col = 3, outcome_col = None, plot_legend = False, cov_factor = 0.25, f_size = (15,15)):
-  from scipy.stats import gaussian_kde
 
   if outcome_col is None:
     n_features = df.shape[1]
