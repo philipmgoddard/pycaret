@@ -180,28 +180,86 @@ class Train():
         axarr.plot(hp2_tmp, metric_tmp, '-x', label = _1)
 
       axarr.set_ylabel(metric)
-      axarr.set_xlabel(hp1)
+      axarr.set_xlabel(hp2)
       axarr.legend(loc = 'best', title = hp1 )
 
     elif n_hyperparams == 3:
+
       hp1 = df.columns.values[0]
       hp2 = df.columns.values[1]
       hp3 = df.columns.values[2]
       metric = df.columns.values[3]
 
       # initialise grid
-      if len(hp3) % 3 == 0:
-        n_row = len(hp3) // 3
-      else:
-        n_row = len(hp3) // 4
+      n_hp1 = df[hp1].drop_duplicates().shape[0]
+      n_row = math.ceil(n_hp1/ 3)
 
-      f, axarr = plt.subplots(nrow, 3, figsize = f_size, dpi=80)
+      f, axarr = plt.subplots(n_row, 3, figsize = f_size, dpi=80)
 
-      # and do the plots
+      ymin = min(df[metric].values) * 0.99
+      ymax = max(df[metric].values) * 1.01
 
+      i = 0
+      j = 0
 
-      sns.factorplot(x = hp1, y = metric, hue = hp2, col = hp3, data = df, facet_kws={'size' : 5})
-      plt.show()
+      for _1 in df[hp1].drop_duplicates():
+        for _2 in df[hp2].drop_duplicates():
+          hp3_tmp = df.loc[(df[hp1] == _1), :].loc[(df[hp2] == _2), [hp3]].values
+          hp3_tmp = [x[0] for x in hp3_tmp]
+          metric_tmp = df.loc[(df[hp1] == _1), :].loc[(df[hp2] == _2), [metric]].values
+          metric_tmp = [x[0] for x in metric_tmp]
+
+          if n_row > 1:
+            axarr[i][j].set_ylim([ymin, ymax])
+            axarr[i][j].spines['right'].set_visible(False)
+            axarr[i][j].spines['top'].set_visible(False)
+            axarr[i][j].tick_params(axis=u'both', which=u'both',length=5)
+
+            axarr[i][j].plot(hp3_tmp, metric_tmp, '-x', label = _2)
+            axarr[i][j].set_title('{} = {}'.format(hp1, str(_1)))
+
+            axarr[i][j].set_ylabel(metric)
+            axarr[i][j].set_xlabel(hp3)
+
+            if i == n_row & j == 2:
+              axarr[i][j].legend(loc = 'best', title = hp2)
+
+            if i < n_row:
+              axarr[i][j].set_xlabel('')
+              axarr[i][j].set_xticklabels([])
+              axarr[i][j].set_xticks([])
+            if j  > 0:
+              axarr[i][j].set_ylabel('')
+              axarr[i][j].set_yticklabels([])
+              axarr[i][j].set_yticks([])
+
+          else:
+            axarr[j].set_ylim([ymin, ymax])
+            axarr[j].spines['right'].set_visible(False)
+            axarr[j].spines['top'].set_visible(False)
+            axarr[j].tick_params(axis=u'both', which=u'both',length=5)
+
+            axarr[j].plot(hp3_tmp, metric_tmp, '-x', label = _2)
+            axarr[j].set_title('{} = {}'.format(hp1, str(_1)))
+
+            axarr[j].set_ylabel(metric)
+            axarr[j].set_xlabel(hp3)
+
+            if j == 2:
+              axarr[j].legend(loc = 'best', title = hp2)
+
+            if j > 0:
+              axarr[j].set_ylabel('')
+              axarr[j].set_yticklabels([])
+              axarr[j].set_yticks([])
+
+        j += 1
+        if j == 3:
+          i += 1
+          j = 0
+
+      f.subplots_adjust(hspace = 0.3)
+
     elif n_hyperparams > 3:
       raise ValueError('Too many hyperparameters for a simple plot. Go manual!')
 
