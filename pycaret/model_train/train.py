@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import copy
 import matplotlib.pyplot as plt
+import math
 #import seaborn as sns
 
 from pycaret.model_train.train_functions import resamp_loop, train_setup, update_summary
@@ -124,25 +125,33 @@ class Train():
     self.fitted_model = model
 
 
-  # TESTS THIS!!!
   def predict(self, newdata, **kwargs):
     '''
-    Useful docstring
+    predict method accesses the predict method of the
+    underlying model wrapper class.
+    newdata: samples to make prediction for
+    kwargs: arguments to be passed to the underlying predict method
     '''
     return self.fitted_model.predict(newdata, **kwargs)
 
 
   def plot(self, f_size = (6,6)):
     '''
-    useful docstring
+    plot method allows quick visualistion of results over hyperparameter
+    grid.
+    For one hyperparameter, produces a simple x-y plot of hp1 vs result
+    For two hyperparameters, produces an x-y plot of hp2 vs result for each value of hp1
+    For three hyperparameters, produces a grid of x-y plots. Each facet is for a distinct hp1 value,
+    displaying hp3 vs result for each value of hp2
+
+    For >3 hyperparameters, the user should create their own plots.
     '''
+
     df = self.metric_results
     n_hyperparams = df.shape[1] - 2
-    #sns.set_style('white')
 
     if n_hyperparams == 1:
 
-      # simple xy plot
       hp1 = df.columns.values[0]
       metric = df.columns.values[1]
 
@@ -152,14 +161,13 @@ class Train():
       axarr.spines['top'].set_visible(False)
       axarr.tick_params(axis=u'both', which=u'both',length=5)
 
-      # sort line and point styles style
       axarr.plot(df[hp1], df[metric], '-')
       axarr.scatter(df[hp1], df[metric])
       axarr.set_ylabel(metric)
       axarr.set_xlabel(hp1)
 
-
     elif n_hyperparams == 2:
+
       hp1 = df.columns.values[0]
       hp2 = df.columns.values[1]
       metric = df.columns.values[2]
