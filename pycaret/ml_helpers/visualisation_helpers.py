@@ -5,8 +5,6 @@ from sklearn.metrics import roc_curve, auc
 #import seaborn as sns
 from scipy.stats import gaussian_kde
 
-
-
 def plot_pred_reg(pred, outcome):
   '''
   Plot prediction vs outcome for regression tasks.
@@ -51,7 +49,6 @@ def plot_roc(predprob, outcome):
   plt.ylabel('True Positive Rate')
   plt.legend(loc="lower right")
   plt.show()
-
 
 
 def kde_plot(df, n_col = 3, outcome_col = None,
@@ -263,17 +260,17 @@ def pairwise_plot(df, outcome_col = None, center_scale = True,
 
             if i== n_features - 1:
               axarr[i,j].set_xlabel(feature_names[j], rotation = 45)
-            else:
-              axarr[i,j].axis('off')
-        else:
+          else:
+            axarr[i,j].axis('off')
+      else:
           tmp_i = cs(df_features.loc[:, feature_names[i]])
           tmp_j = cs(df_features.loc[:, feature_names[j]])
           if j <= i:
             axarr[i,j].scatter(tmp_i,
-                               tmp_j,
-                               label = c,
-                               alpha = 0.5,
-                               s = 2)
+                              tmp_j,
+                              label = c,
+                              alpha = 0.5,
+                              s = 2)
 
             axarr[i, j].set_yticklabels([])
             axarr[i, j].set_xticklabels([])

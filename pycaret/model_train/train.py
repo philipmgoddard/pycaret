@@ -229,17 +229,18 @@ class Train():
             axarr[i][j].set_ylabel(metric)
             axarr[i][j].set_xlabel(hp3)
 
-            if i == n_row & j == 2:
+            if i == 0 & j == 2:
               axarr[i][j].legend(loc = 'best', title = hp2)
 
-            if i < n_row:
+            # is i = 0 the bottom or top row???
+            if i < n_row-1:
               axarr[i][j].set_xlabel('')
               axarr[i][j].set_xticklabels([])
-              axarr[i][j].set_xticks([])
+              #axarr[i][j].set_xticks([])
             if j  > 0:
               axarr[i][j].set_ylabel('')
               axarr[i][j].set_yticklabels([])
-              axarr[i][j].set_yticks([])
+              #axarr[i][j].set_yticks([])
 
           else:
             axarr[j].set_ylim([ymin, ymax])
