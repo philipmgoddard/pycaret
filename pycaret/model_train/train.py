@@ -192,6 +192,7 @@ class Train():
       axarr.legend(loc = 'best', title = hp1 )
 
     elif n_hyperparams == 3:
+      # urg hacky
 
       hp1 = df.columns.values[0]
       hp2 = df.columns.values[1]
@@ -201,6 +202,7 @@ class Train():
       # initialise grid
       n_hp1 = df[hp1].drop_duplicates().shape[0]
       n_row = math.ceil(n_hp1/ 3)
+      n_col = 3
 
       f, axarr = plt.subplots(n_row, 3, figsize = f_size, dpi=80)
 
@@ -209,6 +211,7 @@ class Train():
 
       i = 0
       j = 0
+      plt_count = 0
 
       for _1 in df[hp1].drop_duplicates():
         for _2 in df[hp2].drop_duplicates():
@@ -229,18 +232,8 @@ class Train():
             axarr[i][j].set_ylabel(metric)
             axarr[i][j].set_xlabel(hp3)
 
-            if i == 0 & j == 2:
+            if (i == 0) & (j == 2):
               axarr[i][j].legend(loc = 'best', title = hp2)
-
-            # is i = 0 the bottom or top row???
-            if i < n_row-1:
-              axarr[i][j].set_xlabel('')
-              axarr[i][j].set_xticklabels([])
-              #axarr[i][j].set_xticks([])
-            if j  > 0:
-              axarr[i][j].set_ylabel('')
-              axarr[i][j].set_yticklabels([])
-              #axarr[i][j].set_yticks([])
 
           else:
             axarr[j].set_ylim([ymin, ymax])
@@ -262,10 +255,19 @@ class Train():
               axarr[j].set_yticklabels([])
               axarr[j].set_yticks([])
 
+        plt_count += 1
         j += 1
         if j == 3:
           i += 1
           j = 0
+
+      # kill unused axis
+      if n_row > 1:
+        if n_row * 3 > len(df[hp2].drop_duplicates()):
+          for k in range(j, 3):
+            axarr[n_row-1][k].axis('off')
+
+        # for axarr[i][j]
 
       f.subplots_adjust(hspace = 0.3)
 
