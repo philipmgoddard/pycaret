@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import copy
 import matplotlib.pyplot as plt
-import seaborn as sns
+import math
+#import seaborn as sns
 
 from pycaret.model_train.train_functions import resamp_loop, train_setup, update_summary
 from pycaret.model_train.train_control import TrainControl
@@ -143,7 +144,10 @@ class Train():
 
   def predict(self, newdata, **kwargs):
     '''
-    Useful docstring
+    predict method accesses the predict method of the
+    underlying model wrapper class.
+    newdata: samples to make prediction for
+    kwargs: arguments to be passed to the underlying predict method
     '''
     if self.preProcess is not None:
       for pp in self.preProcess:
@@ -153,35 +157,144 @@ class Train():
       return self.fitted_model.predict(newdata, **kwargs)
 
 
-  def plot(self):
+  def plot(self, f_size = (6,6)):
     '''
-    useful docstring
-    REDO: remove seaborn. I dont like it.
+    plot method allows quick visualistion of results over hyperparameter
+    grid.
+    For one hyperparameter, produces a simple x-y plot of hp1 vs result
+    For two hyperparameters, produces an x-y plot of hp2 vs result for each value of hp1
+    For three hyperparameters, produces a grid of x-y plots. Each facet is for a distinct hp1 value,
+    displaying hp3 vs result for each value of hp2
+
+    For >3 hyperparameters, the user should create their own plots.
     '''
+
     df = self.metric_results
     n_hyperparams = df.shape[1] - 2
-    sns.set_style('white')
 
     if n_hyperparams == 1:
+
       hp1 = df.columns.values[0]
       metric = df.columns.values[1]
-      sns.factorplot(x = hp1, y = metric, data = df, facet_kws={'size' : 5})
-      plt.show()
+
+      f, axarr = plt.subplots(1, 1, figsize = f_size, dpi=80)
+
+      axarr.spines['right'].set_visible(False)
+      axarr.spines['top'].set_visible(False)
+      axarr.tick_params(axis=u'both', which=u'both',length=5)
+
+      axarr.plot(df[hp1], df[metric], '-')
+      axarr.scatter(df[hp1], df[metric])
+      axarr.set_ylabel(metric)
+      axarr.set_xlabel(hp1)
+
     elif n_hyperparams == 2:
+
       hp1 = df.columns.values[0]
       hp2 = df.columns.values[1]
       metric = df.columns.values[2]
-      sns.factorplot(x = hp1, y = metric, hue = hp2, data = df, facet_kws={'size' : 5})
-      plt.show()
+
+      f, axarr = plt.subplots(1, 1, figsize = f_size, dpi=80)
+
+      axarr.spines['right'].set_visible(False)
+      axarr.spines['top'].set_visible(False)
+      axarr.tick_params(axis=u'both', which=u'both',length=5)
+
+      for _1 in df[hp1].drop_duplicates():
+
+        hp2_tmp = df.loc[(df[hp1] == _1), [hp2]].values
+        hp2_tmp = [x[0] for x in hp2_tmp]
+        metric_tmp = df.loc[(df[hp1] == _1), [metric]].values
+        metric_tmp = [x[0] for x in metric_tmp]
+
+        axarr.plot(hp2_tmp, metric_tmp, '-x', label = _1)
+
+      axarr.set_ylabel(metric)
+      axarr.set_xlabel(hp2)
+      axarr.legend(loc = 'best', title = hp1 )
+
     elif n_hyperparams == 3:
+      # urg hacky
+
       hp1 = df.columns.values[0]
       hp2 = df.columns.values[1]
       hp3 = df.columns.values[2]
       metric = df.columns.values[3]
-      sns.factorplot(x = hp1, y = metric, hue = hp2, col = hp3, data = df, facet_kws={'size' : 5})
-      plt.show()
+
+      # initialise grid
+      n_hp1 = df[hp1].drop_duplicates().shape[0]
+      n_row = math.ceil(n_hp1/ 3)
+      n_col = 3
+
+      f, axarr = plt.subplots(n_row, 3, figsize = f_size, dpi=80)
+
+      ymin = min(df[metric].values) * 0.99
+      ymax = max(df[metric].values) * 1.01
+
+      i = 0
+      j = 0
+      plt_count = 0
+
+      for _1 in df[hp1].drop_duplicates():
+        for _2 in df[hp2].drop_duplicates():
+          hp3_tmp = df.loc[(df[hp1] == _1), :].loc[(df[hp2] == _2), [hp3]].values
+          hp3_tmp = [x[0] for x in hp3_tmp]
+          metric_tmp = df.loc[(df[hp1] == _1), :].loc[(df[hp2] == _2), [metric]].values
+          metric_tmp = [x[0] for x in metric_tmp]
+
+          if n_row > 1:
+            axarr[i][j].set_ylim([ymin, ymax])
+            axarr[i][j].spines['right'].set_visible(False)
+            axarr[i][j].spines['top'].set_visible(False)
+            axarr[i][j].tick_params(axis=u'both', which=u'both',length=5)
+
+            axarr[i][j].plot(hp3_tmp, metric_tmp, '-x', label = _2)
+            axarr[i][j].set_title('{} = {}'.format(hp1, str(_1)))
+
+            axarr[i][j].set_ylabel(metric)
+            axarr[i][j].set_xlabel(hp3)
+
+            if (i == 0) & (j == 2):
+              axarr[i][j].legend(loc = 'best', title = hp2)
+
+          else:
+            axarr[j].set_ylim([ymin, ymax])
+            axarr[j].spines['right'].set_visible(False)
+            axarr[j].spines['top'].set_visible(False)
+            axarr[j].tick_params(axis=u'both', which=u'both',length=5)
+
+            axarr[j].plot(hp3_tmp, metric_tmp, '-x', label = _2)
+            axarr[j].set_title('{} = {}'.format(hp1, str(_1)))
+
+            axarr[j].set_ylabel(metric)
+            axarr[j].set_xlabel(hp3)
+
+            if j == 2:
+              axarr[j].legend(loc = 'best', title = hp2)
+
+            if j > 0:
+              axarr[j].set_ylabel('')
+              axarr[j].set_yticklabels([])
+              axarr[j].set_yticks([])
+
+        plt_count += 1
+        j += 1
+        if j == 3:
+          i += 1
+          j = 0
+
+      # kill unused axis
+      if n_row > 1:
+        if n_row * 3 > len(df[hp2].drop_duplicates()):
+          for k in range(j, 3):
+            axarr[n_row-1][k].axis('off')
+
+        # for axarr[i][j]
+
+      f.subplots_adjust(hspace = 0.3)
+
     elif n_hyperparams > 3:
-      raise ValueError('Too many hyperparameters for an intuitive plot. Go manual!')
+      raise ValueError('Too many hyperparameters for a simple plot. Go manual!')
 
 
 

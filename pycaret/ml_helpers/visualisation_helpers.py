@@ -2,10 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
-import seaborn as sns
+#import seaborn as sns
 from scipy.stats import gaussian_kde
-
-
 
 def plot_pred_reg(pred, outcome):
   '''
@@ -17,8 +15,7 @@ def plot_pred_reg(pred, outcome):
   '''
   if len(pred) != len(outcome):
     raise ValueError('pred and outcome must be same length')
-  sns.set_style('white')
-  sns.despine()
+
   mn = min(pred.min(), outcome.min())
   mx = max(pred.max(), outcome.max())
   mx = mx + mx * 0.1
@@ -35,7 +32,7 @@ def plot_pred_reg(pred, outcome):
 
 def plot_roc(predprob, outcome):
   '''
-  Plot roc curve. Uses sklearn.metrics
+  Plot roc curve for binary outcome. Uses sklearn.metrics
 
   Inputs:
   predprob: np array of predicted class probabilties for the positive class
@@ -44,8 +41,6 @@ def plot_roc(predprob, outcome):
   fpr, tpr, _ = roc_curve(outcome, predprob)
   roc_auc = auc(fpr, tpr)
 
-  sns.set_style('white')
-  sns.despine()
   plt.plot(fpr, tpr, lw = 2, label='ROC curve (area = {:.3f})'.format(roc_auc))
   plt.plot([0, 1], [0, 1],color = 'black', lw = 2, linestyle='--')
   plt.xlim([-0.02, 1.02])
@@ -56,9 +51,11 @@ def plot_roc(predprob, outcome):
   plt.show()
 
 
-
-def kde_plot(df, n_col = 3, outcome_col = None, plot_legend = False, cov_factor = 0.25, f_size = (15,15)):
-  from scipy.stats import gaussian_kde
+def kde_plot(df, n_col = 3, outcome_col = None,
+             plot_legend = False, cov_factor = 0.25, f_size = (15,15)):
+  '''
+  docstring please
+  '''
 
   if outcome_col is None:
     n_features = df.shape[1]
@@ -68,7 +65,7 @@ def kde_plot(df, n_col = 3, outcome_col = None, plot_legend = False, cov_factor 
     n_features = df.shape[1] -1
     feature_names = [x for x in df.columns.values if x != outcome_col]
     df_features = df.loc[:, feature_names]
-    outcome_values = sorted([x for x in blah.loc[:, outcome_col].unique()])
+    outcome_values = sorted([x for x in df.loc[:, outcome_col].unique()])
 
   if n_features % n_col == 0:
     n_row = n_features // n_col
@@ -134,6 +131,10 @@ def kde_plot(df, n_col = 3, outcome_col = None, plot_legend = False, cov_factor 
 
 def hist_plot(df, n_col = 3, outcome_col = None, plot_legend = False,
               norm = True, f_size = (15,15)):
+  '''
+  docstring please
+  to check: are bin widths the same???
+  '''
 
   if outcome_col is None:
     n_features = df.shape[1]
@@ -143,7 +144,7 @@ def hist_plot(df, n_col = 3, outcome_col = None, plot_legend = False,
     n_features = df.shape[1] -1
     feature_names = [x for x in df.columns.values if x != outcome_col]
     df_features = df.loc[:, feature_names]
-    outcome_values = sorted([x for x in blah.loc[:, outcome_col].unique()])
+    outcome_values = sorted([x for x in df.loc[:, outcome_col].unique()])
 
   if n_features % n_col == 0:
     n_row = n_features // n_col
@@ -180,25 +181,25 @@ def hist_plot(df, n_col = 3, outcome_col = None, plot_legend = False,
             if plot_legend:
               if (j == 0) & (i == 0):
                 axarr[i,j].legend()
-          v += 1
+        v += 1
+      else:
+        if n_row == 1:
+          axarr[j].hist(df_features.loc[ : , feature_names[v]],
+                        normed = norm, alpha = 0.6)
+          axarr[j].set_title(feature_names[v])
+          if plot_legend:
+            if (j == 0) & (i == 0):
+              axarr[j].legend()
         else:
-          if n_row == 1:
-            axarr[j].hist(df_features.loc[ : , feature_names[v]],
+          axarr[i,j].hist(df_features.loc[ : , feature_names[v]],
                           normed = norm, alpha = 0.6)
-            axarr[j].set_title(feature_names[v])
-            if plot_legend:
-              if (j == 0) & (i == 0):
-                axarr[j].legend()
-          else:
-            axarr[i,j].hist(df_features.loc[ : , feature_names[v]],
-                            normed = norm, alpha = 0.6)
-            axarr[i,j].set_title(feature_names[v])
-            if plot_legend:
-              if (j == 0) & (i == 0):
-                axarr[i,j].legend()
-          v += 1
+          axarr[i,j].set_title(feature_names[v])
+          if plot_legend:
+            if (j == 0) & (i == 0):
+              axarr[i,j].legend()
+        v += 1
 
-        if v == n_features: break
+      if v == n_features: break
 
   f.subplots_adjust(hspace = 0.5)
   #return f
@@ -211,6 +212,9 @@ def cs(var):
 
 def pairwise_plot(df, outcome_col = None, center_scale = True,
                   plot_legend = False, f_size = (15,15)):
+  '''
+  docstring please
+  '''
 
   if outcome_col is None:
     n_features = df.shape[1]
@@ -220,14 +224,14 @@ def pairwise_plot(df, outcome_col = None, center_scale = True,
     n_features = df.shape[1] -1
     feature_names = [x for x in df.columns.values if x != outcome_col]
     df_features = df.loc[:, feature_names]
-    outcome_values = sorted([x for x in blah.loc[:, outcome_col].unique()])
+    outcome_values = sorted([x for x in df.loc[:, outcome_col].unique()])
 
   if center_scale:
     df_features = df_features.apply(lambda x: cs(x))
 
   n_features = df_features.shape[1]
   if n_features == 1:
-    raise NotImplementedError('not implemented for n_features = 1')
+    raise NotImplementedError('not defined for n_features = 1')
 
   f, axarr = plt.subplots(n_features, n_features, figsize = f_size, dpi=80)
 
@@ -239,12 +243,12 @@ def pairwise_plot(df, outcome_col = None, center_scale = True,
 
       if outcome_col is not None:
         for c in outcome_values:
-          tmp_i = cs(inputTrain.loc[:, numVar[i]])
-          tmp_j = cs(inputTrain.loc[:, numVar[j]])
+          tmp_i = cs(df_features.loc[:, feature_names[i]])
+          tmp_j = cs(df_features.loc[:, feature_names[j]])
           if j <= i:
             axarr[i,j].scatter(tmp_i[df[outcome_col] == c],
                                tmp_j[df[outcome_col] == c],
-                               label = lab,
+                               label = c,
                                alpha = 0.5,
                                s = 2)
 
@@ -252,30 +256,30 @@ def pairwise_plot(df, outcome_col = None, center_scale = True,
             axarr[i, j].set_xticklabels([])
 
             if j == 0:
-              axarr[i,j].set_ylabel(numVar[i], rotation = 45)
+              axarr[i,j].set_ylabel(feature_names[i], rotation = 45)
 
-            if i== nVar - 1:
-              axarr[i,j].set_xlabel(numVar[j], rotation = 45)
-            else:
-              axarr[i,j].axis('off')
-        else:
-          tmp_i = cs(inputTrain.loc[:, numVar[i]])
-          tmp_j = cs(inputTrain.loc[:, numVar[j]])
+            if i== n_features - 1:
+              axarr[i,j].set_xlabel(feature_names[j], rotation = 45)
+          else:
+            axarr[i,j].axis('off')
+      else:
+          tmp_i = cs(df_features.loc[:, feature_names[i]])
+          tmp_j = cs(df_features.loc[:, feature_names[j]])
           if j <= i:
             axarr[i,j].scatter(tmp_i,
-                               tmp_j,
-                               label = lab,
-                               alpha = 0.5,
-                               s = 2)
+                              tmp_j,
+                              label = c,
+                              alpha = 0.5,
+                              s = 2)
 
             axarr[i, j].set_yticklabels([])
             axarr[i, j].set_xticklabels([])
 
             if j == 0:
-              axarr[i,j].set_ylabel(numVar[i], rotation = 45)
+              axarr[i,j].set_ylabel(feature_names[i], rotation = 45)
 
-            if i== nVar - 1:
-              axarr[i,j].set_xlabel(numVar[j], rotation = 45)
+            if i== n_features - 1:
+              axarr[i,j].set_xlabel(feature_names[j], rotation = 45)
           else:
             axarr[i,j].axis('off')
 
